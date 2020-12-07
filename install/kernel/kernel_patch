@@ -1,0 +1,604 @@
+diff --git a/include/linux/mem_reservations.h b/include/linux/mem_reservations.h
+new file mode 100644
+index 000000000000..c0730df95bd2
+--- /dev/null
++++ b/include/linux/mem_reservations.h
+@@ -0,0 +1,74 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++
++#ifndef _LINUX_MEM_RESEVATIONS_H
++#define _LINUX_MEM_RESEVATIONS_H
++
++#include <linux/spinlock.h>
++#include <linux/mm_types.h>
++
++#define RESERV_ORDER           3
++#define RESERV_SHIFT           (RESERV_ORDER + PAGE_SHIFT) // 3 + 12 = 15
++#define RESERV_SIZE            ((1UL) << RESERV_SHIFT)     // 00000000000000001000000000000000 //32768 
++#define RESERV_MASK            (~( RESERV_SIZE - 1))       // 11111111111111111000000000000000 //-32768
++#define RESERV_NR              ((1UL) << RESERV_ORDER)     // 00000000000000000000000000001000 //8
++#define RESERV_GROUP_NR_IN_PMD (HPAGE_PMD_NR / RESERV_NR)  // 512 / 8 = 64
++#define RESERV_OFFSET_MASK     ((1UL << RESERV_ORDER) - 1) // 00000000000000000000000000000111 //7
++
++#define CHECK_BIT(var,pos) ((var) &  (1<<(pos)))
++#define SET_BIT(var,pos)   ((var) |= (1<<(pos)))
++#define UNSET_BIT(var,pos) ((var) &= (~(1<<(pos))))
++
++#define NUM_RT_LEVELS         4
++#define RT_LEVEL_INDEX_LENGTH 9 
++#define RT_NODE_RANGE_SIZE    ((1 << RT_LEVEL_INDEX_LENGTH)) // 512
++#define GET_RM_ROOT(vma)      (vma->vm_mm->memory_reservations)
++
++struct rm_entry {
++  void       *next_node;
++  spinlock_t lock;
++};
++
++struct rm_node {
++  struct rm_entry items[RT_NODE_RANGE_SIZE];
++};
++
++static inline unsigned int get_node_index(unsigned char level, unsigned long address) {
++  unsigned int level_mask = (1 << RT_LEVEL_INDEX_LENGTH) - 1;
++  unsigned int total_bit_num_shift = RESERV_SHIFT + ((NUM_RT_LEVELS - level) * RT_LEVEL_INDEX_LENGTH);
++  return (address >> total_bit_num_shift) & level_mask;
++}
++
++static inline unsigned long create_value(struct page *page, unsigned char mask) {
++  unsigned long new_value = (unsigned long)(page);
++  unsigned long new_mask = mask;
++  new_value &= ((1L << 56) - 1);
++  new_value |= (new_mask << 56);
++  return new_value;
++}
++
++static inline struct page *get_page_from_rm(unsigned long leaf_value) {
++  const unsigned long kernel_addr_begin = 255;
++  leaf_value &= ((1L << 56) - 1);
++  leaf_value |= (kernel_addr_begin << 56); //ff0000...0000
++  return (struct page*)(leaf_value);
++}
++
++static inline unsigned char get_mask_from_rm(unsigned long leaf_value) {
++  return (unsigned char)(leaf_value >> 56);
++}
++
++static inline unsigned long update_mask(unsigned long leaf_value, unsigned char new_mask) {
++  struct page *page = get_page_from_rm(leaf_value); 
++  return create_value(page, new_mask);
++}
++
++extern struct rm_node *rm_node_create(void); 
++extern struct page *rm_alloc_from_reservation(struct vm_area_struct *vma, unsigned long address);
++extern int rm_set_unused(struct vm_area_struct *vma, unsigned long address);
++extern void rm_destroy(struct rm_node *node, unsigned char level); 
++
++extern bool check_from_reservation(struct vm_area_struct *vma, unsigned long address);
++
++extern void rm_release_reservation(struct vm_area_struct *vma, unsigned long address);
++
++#endif /* _LINUX_MEM_RESEVATIONS_H */
+diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+index 5ed8f6292a53..071bffb4a964 100644
+--- a/include/linux/mm_types.h
++++ b/include/linux/mm_types.h
+@@ -491,6 +491,8 @@ struct mm_struct {
+ 		/* HMM needs to track a few things per mm */
+ 		struct hmm *hmm;
+ #endif
++
++  struct rm_node *memory_reservations;
+ 	} __randomize_layout;
+ 
+ 	/*
+diff --git a/include/linux/mmzone.h b/include/linux/mmzone.h
+index d4b0c79d2924..ccf303236e2f 100644
+--- a/include/linux/mmzone.h
++++ b/include/linux/mmzone.h
+@@ -181,6 +181,7 @@ enum node_stat_item {
+ 	NR_DIRTIED,		/* page dirtyings since bootup */
+ 	NR_WRITTEN,		/* page writings since bootup */
+ 	NR_INDIRECTLY_RECLAIMABLE_BYTES, /* measured in bytes */
++  NR_MEM_RESERVATIONS_RESERVED,  /* Number unused reserved pages in the memory reservation map */
+ 	NR_VM_NODE_STAT_ITEMS
+ };
+ 
+diff --git a/include/linux/vm_event_item.h b/include/linux/vm_event_item.h
+index 47a3441cf4c4..87e1bda72222 100644
+--- a/include/linux/vm_event_item.h
++++ b/include/linux/vm_event_item.h
+@@ -110,6 +110,10 @@ enum vm_event_item { PGPGIN, PGPGOUT, PSWPIN, PSWPOUT,
+ 		SWAP_RA,
+ 		SWAP_RA_HIT,
+ #endif
++ 		MEM_RESERVATIONS_ALLOC,
++ 		MEM_RESERVATIONS_ALLOC_FAILED,
++ 		MEM_RESERVATIONS_RECEIVED_BY_PID_5555,
++    MEM_DO_ANONYMUS_PAGE_FOR_PID_5555,
+ 		NR_VM_EVENT_ITEMS
+ };
+ 
+diff --git a/kernel/fork.c b/kernel/fork.c
+index f0b58479534f..69431edee4f4 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -11,6 +11,8 @@
+  * management can be a bitch. See 'mm/memory.c': 'copy_page_range()'
+  */
+ 
++#include <linux/mem_reservations.h>
++
+ #include <linux/slab.h>
+ #include <linux/sched/autogroup.h>
+ #include <linux/sched/mm.h>
+@@ -633,6 +635,12 @@ void __mmdrop(struct mm_struct *mm)
+ 	mmu_notifier_mm_destroy(mm);
+ 	check_mm(mm);
+ 	put_user_ns(mm->user_ns);
++  if (mm->memory_reservations) {
++    // debug
++    // printk("Freeing the reservation map");
++    rm_destroy(mm->memory_reservations, 1);
++    mm->memory_reservations = NULL;
++  }
+ 	free_mm(mm);
+ }
+ EXPORT_SYMBOL_GPL(__mmdrop);
+@@ -924,6 +932,8 @@ static void mm_init_uprobes_state(struct mm_struct *mm)
+ static struct mm_struct *mm_init(struct mm_struct *mm, struct task_struct *p,
+ 	struct user_namespace *user_ns)
+ {
++  bool my_app;
++
+ 	mm->mmap = NULL;
+ 	mm->mm_rb = RB_ROOT;
+ 	mm->vmacache_seqnum = 0;
+@@ -966,6 +976,16 @@ static struct mm_struct *mm_init(struct mm_struct *mm, struct task_struct *p,
+ 		goto fail_nocontext;
+ 
+ 	mm->user_ns = get_user_ns(user_ns);
++
++  my_app = (mm->owner->pid == 5555);
++  if (my_app) {
++    mm->memory_reservations = rm_node_create(); 
++    // debug
++    // printk("Creating the reservation map with root=%lx", mm->memory_reservations);
++  } else {
++    mm->memory_reservations = NULL;
++  }
++
+ 	return mm;
+ 
+ fail_nocontext:
+diff --git a/mm/Makefile b/mm/Makefile
+index 26ef77a3883b..3b106add346a 100644
+--- a/mm/Makefile
++++ b/mm/Makefile
+@@ -74,7 +74,7 @@ obj-$(CONFIG_MEMORY_HOTPLUG) += memory_hotplug.o
+ obj-$(CONFIG_MEMTEST)		+= memtest.o
+ obj-$(CONFIG_MIGRATION) += migrate.o
+ obj-$(CONFIG_QUICKLIST) += quicklist.o
+-obj-$(CONFIG_TRANSPARENT_HUGEPAGE) += huge_memory.o khugepaged.o
++obj-$(CONFIG_TRANSPARENT_HUGEPAGE) += huge_memory.o khugepaged.o mem_reservations.o
+ obj-$(CONFIG_PAGE_COUNTER) += page_counter.o
+ obj-$(CONFIG_MEMCG) += memcontrol.o vmpressure.o
+ obj-$(CONFIG_MEMCG_SWAP) += swap_cgroup.o
+diff --git a/mm/mem_reservations.c b/mm/mem_reservations.c
+new file mode 100644
+index 000000000000..4d42b110c82b
+--- /dev/null
++++ b/mm/mem_reservations.c
+@@ -0,0 +1,284 @@
++/*
++ * mm/mem_reservations.c - mechanism for reserving 32KB chunks of physical memory 
++ *                         to accelerate page walks when running under virtualization
++ *
++ * Copyright 2020, Artemiy Margaritov <artemiy.margaritov@ed.ac.uk>
++ * Released under the General Public License (GPL).
++ *
++ */
++
++#include <linux/mm.h>
++#include <linux/slab.h> 
++#include <linux/highmem.h>
++#include <linux/vmstat.h>
++#include <linux/mem_reservations.h>
++
++struct rm_node* rm_node_create() {
++  struct rm_node* new = NULL;
++  unsigned int i;
++  new = kmalloc(sizeof(struct rm_node), GFP_KERNEL & ~__GFP_DIRECT_RECLAIM);
++  if (new) {
++    for (i = 0; i < RT_NODE_RANGE_SIZE; i++) {
++      spin_lock_init(&new->items[i].lock);
++      new->items[i].next_node = NULL;
++    }
++  }
++  return new;
++}
++
++extern void rm_release_reservation(struct vm_area_struct *vma, unsigned long address) {
++  unsigned char level;
++  unsigned int i;
++  unsigned int index;
++  int unused;
++
++  struct rm_node *cur_node = GET_RM_ROOT(vma);
++  struct rm_node *next_node;
++  
++  unsigned long leaf_value;
++  unsigned char mask;
++
++  struct page *page;
++  spinlock_t  *next_lock;
++
++  gfp_t gfp           = ((GFP_HIGHUSER | __GFP_NOMEMALLOC | __GFP_NOWARN) & ~__GFP_RECLAIM);
++	unsigned long haddr = address & RESERV_MASK; 
++  int region_offset   = (address & (~RESERV_MASK)) >> PAGE_SHIFT;
++  bool my_app         = (vma->vm_mm->owner->pid == 5555);
++
++  if (!my_app) 
++    return;
++  if (cur_node == NULL) 
++    return;
++  if (!vma_is_anonymous(vma)) {
++    return;
++  }
++
++  // traverse the reservation map radix tree
++  // firstly, go through all levels but don't go to the leaf node
++  for (level = 1; level < NUM_RT_LEVELS; level++) {
++    index = get_node_index(level, address);
++    next_lock = &cur_node->items[index].lock;
++    next_node = cur_node->items[index].next_node;
++
++    if (unlikely(next_node == NULL)) {
++      spin_lock(next_lock);
++      if (next_node == NULL) {
++        cur_node->items[index].next_node = rm_node_create();
++      }
++      spin_unlock(next_lock);
++    }
++
++    cur_node = cur_node->items[index].next_node;
++  }
++
++  // secondly, process the leaf node
++  level = NUM_RT_LEVELS;
++  index = get_node_index(level, address); 
++  next_lock = &cur_node->items[index].lock;
++
++  spin_lock(next_lock);
++  leaf_value = (unsigned long)(cur_node->items[index].next_node);
++  if (leaf_value != 0) { 
++    page = get_page_from_rm(leaf_value);
++    mask = get_mask_from_rm(leaf_value);
++
++    unused = 8;
++    while (mask) {
++      unused -= mask & 1;
++      mask = (mask >> 1);
++    }
++    if (unused) {
++      mod_node_page_state(page_pgdat(page), NR_MEM_RESERVATIONS_RESERVED, -unused);
++    }
++
++    for (i = 0; i < RESERV_NR; i++) {
++      put_page(page + i);
++    }
++
++    cur_node->items[index].next_node = 0; 
++  }
++  spin_unlock(next_lock);
++  return;
++}
++
++bool check_from_reservation(struct vm_area_struct *vma, unsigned long address) {
++  unsigned char level;
++  unsigned int i;
++  unsigned int index;
++
++  struct rm_node *cur_node = GET_RM_ROOT(vma);
++  struct rm_node *next_node;
++  
++  unsigned long leaf_value;
++  unsigned char mask;
++
++  struct page *page;
++  spinlock_t  *next_lock;
++
++  gfp_t gfp           = ((GFP_HIGHUSER | __GFP_NOMEMALLOC | __GFP_NOWARN) & ~__GFP_RECLAIM);
++	unsigned long haddr = address & RESERV_MASK; 
++  int region_offset   = (address & (~RESERV_MASK)) >> PAGE_SHIFT;
++  bool my_app         = (vma->vm_mm->owner->pid == 5555);
++
++  if (!my_app) 
++    return false;
++  if (cur_node == NULL) 
++    return false;
++  if (!vma_is_anonymous(vma)) {
++    return false;
++  }
++
++  // traverse the reservation map radix tree
++  // firstly, go through all levels but don't go to the leaf node
++  for (level = 1; level < NUM_RT_LEVELS; level++) {
++    index = get_node_index(level, address);
++    next_lock = &cur_node->items[index].lock;
++    next_node = cur_node->items[index].next_node;
++
++    if (unlikely(next_node == NULL)) {
++      spin_lock(next_lock);
++      if (next_node == NULL) {
++        cur_node->items[index].next_node = rm_node_create();
++      }
++      spin_unlock(next_lock);
++    }
++
++    cur_node = cur_node->items[index].next_node;
++  }
++
++  // secondly, process the leaf node
++  level = NUM_RT_LEVELS;
++  index = get_node_index(level, address); 
++  next_lock = &cur_node->items[index].lock;
++
++  spin_lock(next_lock);
++  leaf_value = (unsigned long)(cur_node->items[index].next_node);
++  spin_unlock(next_lock);
++  if (leaf_value != 0) { 
++    return true;
++  } else {
++    return false;
++  }
++}
++
++struct page *rm_alloc_from_reservation(struct vm_area_struct *vma, unsigned long address) {
++  unsigned char level;
++  unsigned int i;
++  unsigned int index;
++
++  struct rm_node *cur_node = GET_RM_ROOT(vma);
++  struct rm_node *next_node;
++  
++  unsigned long leaf_value;
++  unsigned char mask;
++
++  struct page *page;
++  spinlock_t  *next_lock;
++
++  gfp_t gfp           = ((GFP_HIGHUSER | __GFP_NOMEMALLOC | __GFP_NOWARN) & ~__GFP_RECLAIM);
++	unsigned long haddr = address & RESERV_MASK; 
++  int region_offset   = (address & (~RESERV_MASK)) >> PAGE_SHIFT;
++  bool my_app         = (vma->vm_mm->owner->pid == 5555);
++
++  if (!my_app) 
++    return NULL;
++  if (cur_node == NULL) 
++    return false;
++  if (!vma_is_anonymous(vma)) {
++    return NULL;
++  }
++
++  // traverse the reservation map radix tree
++  // firstly, go through all levels but don't go to the leaf node
++  for (level = 1; level < NUM_RT_LEVELS; level++) {
++    index = get_node_index(level, address);
++    next_lock = &cur_node->items[index].lock;
++    next_node = cur_node->items[index].next_node;
++
++    if (unlikely(next_node == NULL)) {
++      spin_lock(next_lock);
++      if (next_node == NULL) {
++        cur_node->items[index].next_node = rm_node_create();
++      }
++      spin_unlock(next_lock);
++    }
++
++    cur_node = cur_node->items[index].next_node;
++  }
++
++  // secondly, process the leaf node
++  level = NUM_RT_LEVELS;
++  index = get_node_index(level, address); 
++  next_lock = &cur_node->items[index].lock;
++
++  spin_lock(next_lock);
++  leaf_value = (unsigned long)(cur_node->items[index].next_node);
++  page = get_page_from_rm(leaf_value);
++  if (leaf_value == 0) { //create a new reservation if not present 
++    // allocate pages 
++    page = alloc_pages_vma(gfp, RESERV_ORDER, vma, haddr, numa_node_id(), false); 
++    for (i = 0; i < RESERV_NR; i++) {
++      set_page_count(page + i, 1);
++    }
++    // create a leaf node
++    leaf_value = create_value(page, 0);
++    mod_node_page_state(page_pgdat(page), NR_MEM_RESERVATIONS_RESERVED, RESERV_NR - 1);
++    count_vm_event(MEM_RESERVATIONS_ALLOC);
++  } else {
++    mod_node_page_state(page_pgdat(page), NR_MEM_RESERVATIONS_RESERVED, -1);
++  }
++  page = page + region_offset;
++
++  // mark the page as used
++  mask = get_mask_from_rm(leaf_value);
++  SET_BIT(mask, region_offset); 
++  leaf_value = update_mask(leaf_value, mask);
++  cur_node->items[index].next_node = (void*)(leaf_value);
++
++  get_page(page);
++  clear_user_highpage(page, address);
++
++  spin_unlock(next_lock);
++  count_vm_event(MEM_RESERVATIONS_RECEIVED_BY_PID_5555);
++
++  return page;
++}
++
++void rm_destroy(struct rm_node *node, unsigned char level) { //not thread-safe 
++  unsigned int index;
++  int i;
++  struct rm_node *cur_node = node;
++  unsigned char mask;
++  unsigned char unused;
++  struct page *page;
++  unsigned long leaf_value;
++
++  // traverse the reservaton map radix tree
++  for (index = 0; index < RT_NODE_RANGE_SIZE; index++) {
++    if (cur_node->items[index].next_node != NULL) {
++      if (level != 4) {
++        rm_destroy(cur_node->items[index].next_node, level + 1);
++      } else {
++        leaf_value = (unsigned long)(cur_node->items[index].next_node);
++        page = get_page_from_rm(leaf_value);
++        mask = get_mask_from_rm(leaf_value);
++
++        unused = 8;
++        while (mask) {
++          unused -= mask & 1;
++          mask = (mask >> 1);
++        }
++        if (unused) {
++          mod_node_page_state(page_pgdat(page), NR_MEM_RESERVATIONS_RESERVED, -unused);
++        }
++
++        for (i = 0; i < RESERV_NR; i++) {
++          put_page(page + i);
++        }
++      }
++    }
++  }
++  kfree(cur_node);
++  return;
++}
+diff --git a/mm/memory.c b/mm/memory.c
+index c467102a5cbc..125d2e4bf5fe 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -38,6 +38,8 @@
+  * Aug/Sep 2004 Changed to four level page tables (Andi Kleen)
+  */
+ 
++#include <linux/mem_reservations.h>
++
+ #include <linux/kernel_stat.h>
+ #include <linux/mm.h>
+ #include <linux/sched/mm.h>
+@@ -2504,6 +2506,7 @@ static vm_fault_t wp_page_copy(struct vm_fault *vmf)
+ 		if (!new_page)
+ 			goto oom;
+ 	} else {
++    rm_release_reservation(vma, vmf->address);
+ 		new_page = alloc_page_vma(GFP_HIGHUSER_MOVABLE, vma,
+ 				vmf->address);
+ 		if (!new_page)
+@@ -3167,9 +3170,24 @@ static vm_fault_t do_anonymous_page(struct vm_fault *vmf)
+ 	}
+ 
+ 	/* Allocate our own private page. */
++
++  if (vma->vm_mm->owner->pid == 5555) {
++    count_vm_event(MEM_DO_ANONYMUS_PAGE_FOR_PID_5555);
++  }
++
+ 	if (unlikely(anon_vma_prepare(vma)))
+ 		goto oom;
+-	page = alloc_zeroed_user_highpage_movable(vma, vmf->address);
++  if (GET_RM_ROOT(vma)) {
++    page = rm_alloc_from_reservation(vma, vmf->address);
++  } else {
++    page = NULL;
++  }
++  if ((GET_RM_ROOT(vma)) && (page == NULL)) {
++    count_vm_event(MEM_RESERVATIONS_ALLOC_FAILED);
++  }
++  if (!page) {
++    page = alloc_zeroed_user_highpage_movable(vma, vmf->address);
++  }
+ 	if (!page)
+ 		goto oom;
+ 
+diff --git a/mm/mmap.c b/mm/mmap.c
+index f7cd9cb966c0..3cb1f1204a0d 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -51,6 +51,8 @@
+ #include <asm/tlb.h>
+ #include <asm/mmu_context.h>
+ 
++#include <linux/mem_reservations.h>
++
+ #include "internal.h"
+ 
+ #ifndef arch_mmap_check
+@@ -2693,6 +2695,12 @@ int do_munmap(struct mm_struct *mm, unsigned long start, size_t len,
+ 	unsigned long end;
+ 	struct vm_area_struct *vma, *prev, *last;
+ 
++  unsigned long it_addr;
++
++  if (mm->owner->pid == 5555) {
++    printk("do_munmap");
++  }
++
+ 	if ((offset_in_page(start)) || start > TASK_SIZE || len > TASK_SIZE-start)
+ 		return -EINVAL;
+ 
+@@ -2736,6 +2744,11 @@ int do_munmap(struct mm_struct *mm, unsigned long start, size_t len,
+ 		prev = vma;
+ 	}
+ 
++  it_addr = start;
++  for (; it_addr < end; it_addr += PAGE_SIZE) {
++    rm_release_reservation(vma, it_addr);
++  }
++
+ 	/* Does it split the last one? */
+ 	last = find_vma(mm, end);
+ 	if (last && end > last->vm_start) {
+diff --git a/mm/rmap.c b/mm/rmap.c
+index 1e79fac3186b..3c87eb940c46 100644
+--- a/mm/rmap.c
++++ b/mm/rmap.c
+@@ -66,6 +66,8 @@
+ #include <linux/memremap.h>
+ #include <linux/userfaultfd_k.h>
+ 
++#include <linux/mem_reservations.h>
++
+ #include <asm/tlbflush.h>
+ 
+ #include <trace/events/tlb.h>
+@@ -1646,6 +1648,7 @@ static bool try_to_unmap_one(struct page *page, struct vm_area_struct *vma,
+ 			dec_mm_counter(mm, mm_counter_file(page));
+ 		}
+ discard:
++    rm_release_reservation(vma, address);
+ 		/*
+ 		 * No need to call mmu_notifier_invalidate_range() it has be
+ 		 * done above for all cases requiring it to happen under page
+diff --git a/mm/vmstat.c b/mm/vmstat.c
+index 7878da76abf2..259edca68eed 100644
+--- a/mm/vmstat.c
++++ b/mm/vmstat.c
+@@ -1162,6 +1162,7 @@ const char * const vmstat_text[] = {
+ 	"nr_dirtied",
+ 	"nr_written",
+ 	"", /* nr_indirectly_reclaimable */
++  "nr_mem_reservations_reserved",
+ 
+ 	/* enum writeback_stat_item counters */
+ 	"nr_dirty_threshold",
+@@ -1291,6 +1292,10 @@ const char * const vmstat_text[] = {
+ 	"swap_ra",
+ 	"swap_ra_hit",
+ #endif
++  "nr_mem_reservations_alloc",
++  "nr_mem_reservations_alloc_failed",
++  "nr_mem_reservations_alloc_received_by_pid_5555",
++  "nr_mem_do_anonymus_page_for_pid_5555"
+ #endif /* CONFIG_VM_EVENTS_COUNTERS */
+ };
+ #endif /* CONFIG_PROC_FS || CONFIG_SYSFS || CONFIG_NUMA */
