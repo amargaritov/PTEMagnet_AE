@@ -1,0 +1,3 @@
+[submodule "evaluation/distbenchr"]
+	path = evaluation/distbenchr
+	url = https://github.com/marioskogias/distbenchr.git
