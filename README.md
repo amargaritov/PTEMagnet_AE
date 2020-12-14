@@ -7,6 +7,8 @@ This repository includes an artifact evaluation pack for PTEMagnet (#111 ASPLOS'
 * scripts for installing relevant tools and setting the environment
 
 ## Installation
+This code is designed to run on a x86 server with 20+ cores running Ubuntu 18.04 LTS. 
+
 ### Part 1: clone this repo
 ```bash
 sudo apt-get update
@@ -15,7 +17,7 @@ git clone --recurse-submodules https://github.com/amargaritov/PTEMagnet_artifact
 ```
 
 ### Part 2: install packages and set environment
-On Ubuntu 18.04 LTS, 
+This step can take up to 2 hours. 
 ```bash
 cd PTEMagnet_artifact_evaluation
 ./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE> 
