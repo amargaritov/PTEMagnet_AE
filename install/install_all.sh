@@ -33,16 +33,10 @@ $SCRIPT_DIR/kernel/build_kernels.sh $KERNEL_DIR
 export IMAGE_DIR="$INSTALL_PATH/vm_images"
 echo "export IMAGE_DIR=\"$INSTALL_PATH/vm_images\"" >> $REPO_ROOT/source.sh 
 
-if [ -z "$(hostname | grep cloudlab)" ]; then 
-	# if we are not on Cloudlab we need to download a disk 
-	timeout 60 $SCRIPT_DIR/vm_disk_image/download_vm_disk_image.sh $IMAGE_DIR 
-	if [ $? -eq 124 ]; then
-	    # Timeout occurred
-	  echo "It seems that something is wrong with the download source. Please sent a message to Artemiy <artemiy.margaritov@ed.ac.uk>" 
-	  exit 1
-	fi
-# else 
-# Cloudlab already has a preinstalled disk
+$SCRIPT_DIR/vm_disk_image/download_vm_disk_image.sh $IMAGE_DIR 
+if [ $? -eq 124 ]; then
+    # Timeout occurred
+  exit 124
 fi
 
 echo "$REPO_ROOT/disable_thp_no_drop.sh" >> $REPO_ROOT/source.sh
