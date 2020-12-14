@@ -44,7 +44,7 @@ ssh-copy-id $USER@localhost
 ```
 If using Cloudlab, you would need to copy your cloudlab ssh key to the host 
 ```bash
-# on machine you ssh to Cloudlab to
+# on machine you ssh to Cloudlab from
 scp -P 22 ~/.ssh/<YOUR_CLOUDLAB_KEY> <CLOUDLAB_USERNAME@CLOUDLAB_MACHINE>:~/.ssh/ 
 # on Cloudlab machine
 chmod 400 ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
