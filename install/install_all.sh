@@ -45,9 +45,13 @@ if [ -z "$(hostname | grep cloudlab)" ]; then
 # Cloudlab already has a preinstalled disk
 fi
 
+echo "$REPO_ROOT/disable_thp_no_drop.sh" >> $REPO_ROOT/source.sh
 
 # install venv
 $SCRIPT_DIR/python/install_venv.sh $REPO_ROOT
 echo "source $REPO_ROOT/venv/bin/activate" >> $REPO_ROOT/source.sh 
 
 echo "cd $REPO_ROOT; source source.sh" >> ~/.bashrc 
+
+source $REPO_ROOT/source.sh
+
