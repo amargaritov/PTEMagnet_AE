@@ -34,7 +34,7 @@ def main():
       print(args.kernel)
       mnt.bg_execute(start_vm, str(args.kernel).replace("\"",""), should_wait=False)
       # wait for the vm to start
-      time.sleep(25)
+      time.sleep(40)
 
       # alloc memory in the guest to prefault memory 
       execute(prefault_hostmem)
@@ -57,7 +57,7 @@ def main():
             break
 
       mnt.monitor() # wait for the client to finish
-      time.sleep(30)
+      time.sleep(40)
 
       print("Finished all experiments, execution times are:")
       print(execution_time)
