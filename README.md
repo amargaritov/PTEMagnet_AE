@@ -23,16 +23,20 @@ This script
 
 ### Part 2: setting ssh keys for passwordless login to a machine 
 Evaluation scripts should be able to passwordlessly ssh to 1) a virtual machine where the benchmarks would run and 2) to the host. In our opinion, the simplest way to achieve passwordless ssh is using ssh keys. To upload an ssh key to the virtual machine
-* generate ssh key with 
+* Generate ssh key with 
 ```bash
 ssh-keygen -t rsa
 ```
-* boot a virtual machine with the provided disk image (see section Miscellaneous below for instructions on how to boot a virtual machine manually)
-* upload the ssh key to a virtual machine with 
+* Boot a virtual machine with the provided disk image
+```bash
+KERNEL=clean; sudo qemu-system-x86_64 -kernel /disk/local/linux/linux_$KERNEL/arch/x86/boot/bzImage -boot c -m 64G -hda /disk/local/rootfs.img -append "root=/dev/sda rw" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic
+```
+* Wait for machine to boot (login prompt should appear)
+* Start a new shell on the host, upload the generated ssh key to a virtual machine 
 ```bash 
 ssh-copy-id -p 6666 user@localhost
 ```
-When asked for password, type `user`
+when asked for password, type `user`
 * To allow passwordless login from the host to the host itself upload the ssh key to it
 ```bash
 # This does not work on Cloudlab!
@@ -47,7 +51,7 @@ chmod 400 ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
 ```
-* shutdown the virtual machine
+* Shutdown the virtual machine
 ```bash 
 ssh -p 6666 user@localhost 'sudo shutdown -h now' 
 ```
