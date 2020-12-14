@@ -5,6 +5,8 @@ if [ ! -d "./venv" ]; then
 	virtualenv -p /usr/bin/python venv
 	source ./venv/bin/activate
 	pip install glob2
+  pip isntall scipy
+  pip install pandas
 	pip install 'fabric<2.0'
 
 	pushd ./venv
