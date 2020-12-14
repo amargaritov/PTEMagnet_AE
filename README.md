@@ -70,9 +70,12 @@ ssh $USER@localhost
 ```bash 
 ssh -p 6666 user@localhost 'sudo shutdown -h now' 
 ```
-### Part 4: Disable CPU frequency scaling
-Dynamic CPU frequency scaling can lead to variability in performance and can introduce substational noise to the measurements. To disable frequency scaling, one needs
-* disable `P-states` in BIOS (the actual list of settings to change in BIOS depends on a server model, please contact Artemiy <artemiy.margaritov@ed.ac.uk> if you experience problems -- we may provide a presetup Cloudlab machine to you)
+### Part 4: Disable dynamic CPU power management
+Dynamic CPU frequency scaling can lead to variability in performance and can introduce substational noise to the measurements. As a result, to reduce the system jitter in the latency measurement experiments it is better to disable frequency scaling. For this, one needs
+* change BIOS settings
+   * disable `P states`
+   * setting "System Profile Settings" in BIOS -> “CPU power management” needs to be set to “ OS DBPM” instead of “Maximum performance”
+(the actual list of BIOS settings to change depends on a server model, please contact Artemiy <artemiy.margaritov@ed.ac.uk> if you face problems -- we may provide a preconfigured Cloudlab machine to you)
 * update Linux kernel boot paramenters to change the frequency driver from `intel_pstate` to `acpi driver`
   * edit `/etc/default/grub`: add the following boot parameters to `GRUB_CMDLINE_LINUX_DEFAULT`:
   `usbcore.autosuspend=-1 intel_pstate=disable intel_iommu=on iommu=pt nokaslr rhgb quiet tsc=reliable cpuidle.off=1 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 pcie_aspm=off processor.ignore_ppc=1`
@@ -102,7 +105,7 @@ $REPO_ROOT/install/freq/cpufreq-set-all -f 2000000
 
 
 ## Evaluation 
-### Getting all the data for Figure 6
+### Getting all the results for Figure 6
 You can launch the evaluation for all the benchmarks with `launch_all_exps`. Firstly, create a screen session 
 ```bash 
 screen -L -Logfile ae_all_log -S ae_ptemagnet_all
