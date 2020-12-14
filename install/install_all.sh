@@ -16,6 +16,7 @@ echo "Will install kernels to $INSTALL_PATH"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 REPO_ROOT=$SCRIPT_DIR/..
+echo "export REPO_ROOT=\"$REPO_ROOT\"" >> $REPO_ROOT/source.sh
 
 #---------------------------------------------------------------
 
@@ -47,5 +48,5 @@ echo "source $REPO_ROOT/venv/bin/activate" >> $REPO_ROOT/source.sh
 
 echo "cd $REPO_ROOT; source source.sh" >> ~/.bashrc 
 
-source $REPO_ROOT/source.sh
 
+source $REPO_ROOT/source.sh
