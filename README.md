@@ -43,9 +43,9 @@ If using Cloudlab, you would need to copy your cloudlab ssh key to the host
 # on machine you ssh to Cloudlab to
 scp -P 22 ~/.ssh/<YOUR_CLOUDLAB_KEY> <CLOUDLAB_USERNAME@CLOUDLAB_MACHINE>:~/.ssh/ 
 # on Cloudlab machine
-chmod 400 ~/.ssh/<YOUR_COPYED_CLOUDLAB_KEY>
+chmod 400 ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
 eval "$(ssh-agent -s)"
-ssh-add ~/.ssh/<YOUR_COPYED_CLOUDLAB_KEY>
+ssh-add ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
 ```
 * shutdown the virtual machine
 ```bash 
@@ -64,7 +64,7 @@ For example, the following command will print average execution time for mcf run
 ```bash
 cd ./evaluation/; mkdir -p results; ./lauch_exp.py --experiment_tag asplos21_ae --kernel modified --app mcf --num_experiments 10 --result_dir ./results
 ```
-To get the results of Figure 6, one needs to run the script for each benchmark two times: with clean and modified kernel and compare the execution times. 
+To reproduce the results of Figure 6, one needs to run the script for each benchmark two times: with clean and modified kernel and compare the execution times. 
 
 ## Miscellaneous
 
