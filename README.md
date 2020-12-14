@@ -78,6 +78,17 @@ To reproduce the results of Figure 6, one needs to run the script for each bench
 
 The scripts save the result files to the directory specified with the parameter `--result_dir`. As this artifact is designed to measure execution time, only `Test_time` line is meaningful in a result file (all other numbers should be ignored).
 
+You can launch the evaluation for all benchmarks with 
+```bash 
+cd evaluation; screen -L -Logfile ae_all_log -S ae_ptemagnet_all -dm ./launch_all_exps.sh
+```
+To check if the experiments launched correctly open the screen
+```bash
+screen -r ae_ptemagnet_all
+```
+and make sure the script is running (the virtual machine should start booting, then after about 40 seconds it should move to prefaulting host memory, then launch MLPerf and a benchmark a)
+You can close the screen by pressing <CTRL>+A and D. 
+
 ## Miscellaneous
 
 ### Building Linux kernel 
