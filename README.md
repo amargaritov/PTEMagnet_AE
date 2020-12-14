@@ -33,13 +33,14 @@ To get the results of Figure 6, one needs to run the script for each benchmark t
 ## Miscellaneous
 
 ### Building Linux kernel 
+Note that both clean and modified Linux kernels were already built by the installation script. You need to run it only if you want to rebuild them. 
 ```bash
 ./install/build_kernels.sh <PATH_TO_WHERE_PUT_KERNELS> 
 ```
 Note that both clean and modified Linux kernels were already built by the installation script. You need to run it only if you want to rebuild them. 
 
 ### Downloading the VM image
-Note that the VM image is already downloaded by the installation script. 
+Note that the VM image is already downloaded by the installation script. You don't need to run it.
 ```bash
 ./install/download_vm_disk_image.sh <PATH_TO_WHERE_PUT_IMAGE>
 ```
