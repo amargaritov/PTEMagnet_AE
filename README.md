@@ -7,7 +7,13 @@ This repository includes an artifact evaluation pack for PTEMagnet (#111 ASPLOS'
 * scripts for installing relevant tools and setting the environment
 
 ## Installation
-### Part 1: packages and environment
+### Part 1: clone this repo
+```bash
+sudo apt-get install git
+git clone --recurse-submodules https://github.com/amargaritov/PTEMagnet_artifact_evaluation.git
+```
+
+### Part 2: install packages and set environment
 On Ubuntu 18.04 LTS, 
 ```bash
 ./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE> 
@@ -21,7 +27,7 @@ This script
 
 **Note that we can provide access to a preconfigured Cloudlab profile (and servers) on which this code was tested. Using the Cloudlab profile accelerates installation and simplifies troubleshooting. If you are interested in running the artifact evaluation on Cloudlab, please email Artemiy <artemiy.margaritov@ed.ac.uk>.**
 
-### Part 2: setting ssh keys for passwordless ssh
+### Part 3: setting ssh keys for passwordless ssh
 Evaluation scripts should be able to passwordlessly ssh to 1) a virtual machine where the benchmarks would run and 2) to the host. In our opinion, the simplest way to achieve passwordless ssh is using ssh keys. To upload an ssh key to the virtual machine
 * Generate ssh key with 
 ```bash
