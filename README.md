@@ -40,7 +40,7 @@ ssh-keygen -t rsa
 ```
 * Boot a virtual machine with the provided disk image
 ```bash
-KERNEL=clean; sudo qemu-system-x86_64 -kernel /disk/local/linux/linux_$KERNEL/arch/x86/boot/bzImage -boot c -m 64G -hda /disk/local/rootfs.img -append "root=/dev/sda rw" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic
+KERNEL=clean; sudo qemu-system-x86_64 KERNEL=clean; sudo qemu-system-x86_64 -kernel $KERNEL_DIR/linux_$KERNEL/arch/x86/boot/bzImage -boot c -m 64G -hda $IMAGE_DIR/rootfs.img -append "root=/dev/sda rw" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic
 ```
 * Wait for machine to boot (login prompt should appear)
 * Start a new shell on the host, upload the generated ssh key to a virtual machine 
@@ -145,7 +145,7 @@ Note that the VM image is already downloaded by the installation script. You don
 ### Running a virtual machine manually
 If you want to boot a virtual machine with the VM image manually you can run the following command:
 ```bash 
-KERNEL=clean; sudo qemu-system-x86_64 -kernel /disk/local/linux/linux_$KERNEL/arch/x86/boot/bzImage -boot c -m 64G -hda /disk/local/rootfs.img -append "root=/dev/sda rw" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic
+KERNEL=clean; sudo qemu-system-x86_64 -kernel $KERNEL_DIR/linux_$KERNEL/arch/x86/boot/bzImage -boot c -m 64G -hda $IMAGE_DIR/rootfs.img -append "root=/dev/sda rw" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic
 ```
 This command boot a machine with 20 cores and 64GB memory. 
 After launching the virtual machine you can ssh into it with
