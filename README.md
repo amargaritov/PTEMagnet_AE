@@ -41,9 +41,11 @@ ssh-copy-id $USER@localhost
 If using Cloudlab, you would need to copy your cloudlab ssh key to the host 
 ```bash
 # on machine you ssh to Cloudlab to
-scp ~/.ssh/<YOUR_CLOUDLAB_KEY> -P 22 <CLOUDLAB_USERNAME@CLOUDLAB_MACHINE>:~/.ssh/ 
-# on Cloudlab machine 
+scp -P 22 ~/.ssh/<YOUR_CLOUDLAB_KEY> <CLOUDLAB_USERNAME@CLOUDLAB_MACHINE>:~/.ssh/ 
+# on Cloudlab machine
 chmod 400 ~/.ssh/<YOUR_COPYED_CLOUDLAB_KEY>
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/<YOUR_COPYED_CLOUDLAB_KEY>
 ```
 * shutdown the virtual machine
 ```bash 
