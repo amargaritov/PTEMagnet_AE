@@ -39,7 +39,7 @@ if [ $? -eq 124 ]; then
   exit 124
 fi
 
-echo "$REPO_ROOT/disable_thp_no_drop.sh" >> $REPO_ROOT/source.sh
+echo "$REPO_ROOT/evaluation/disable_thp_no_drop.sh" >> $REPO_ROOT/source.sh
 
 # install venv
 $SCRIPT_DIR/python/install_venv.sh $REPO_ROOT
