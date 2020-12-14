@@ -1,9 +1,10 @@
 # PTEMagnet Artifact Evaluation Pack
 
-This repository includes an artifact for PTEMagnet (#111 ASPLOS'21 paper). The artifact reproduces the results of Figure 6 in the paper. This repo also includes the PTEMagnet path for Linux Kernel, making it publically available. The artifact consists of:
-* a patch implementing PTEMagnet in Linux Kernel v4.19 with scripts for building clean and modified versions of the kernel 
+This repository includes an artifact evaluation pack for PTEMagnet (#111 ASPLOS'21 paper). The artifact reproduces the results of Figure 6 in the paper. This repo also includes the PTEMagnet path for Linux Kernel, making it publically available. The artifact consists of:
+* a patch implementing PTEMagnet in Linux Kernel v4.19 together with scripts for building clean and modified versions of the kernel 
 * a disk image for QEMU containing Ubuntu 16.04 LTS with selected SPEC'17, GPOP, and MLPerf ObjDetect benchmarks with their reference datasets; the disk image also contains scripts for running SPEC'17 and GPOP benchmarks colocated with MLPerf ObjDetect 
 * a python scripts for launching and measuring the execution time of SPEC'17 and GPOP benchmarks when running colocated with MLPerf ObjDetect within a virtual machine with and without PTEMagnet
+* scripts for installing relevant tools and setting the environment
 
 ## Installation
 On Ubuntu 18.04 LTS, 
