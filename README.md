@@ -19,7 +19,7 @@ On Ubuntu 18.04 LTS,
 ./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE> 
 ```
 This script  
-* installs all relevant 
+* installs all relevant tools & libraries
 * builds the _clean_ kernel and the _modified_ kernel with PTEMagnet
 * downloads the disk image for a VM (if run outside of Cloudlab)
 * sets relevant shell and python environment for scripts automating launching and measuring the execution time of benchmarks
