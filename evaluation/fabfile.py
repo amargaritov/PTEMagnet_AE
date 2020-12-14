@@ -70,5 +70,6 @@ def shutdown_vm():
 @run_bg('servers')
 def start_vm(kernel):
   kernel = kernel.replace("\"","") 
-  cmd = 'sudo numactl --membind=0 --cpunodebind=0 qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 64G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic'
+  #cmd = 'sudo numactl --membind=0 --cpunodebind=0 qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 64G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic'
+  cmd = 'sudo qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 64G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic'
   run(cmd)
