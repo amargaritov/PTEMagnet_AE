@@ -1,15 +1,19 @@
 #!/bin/bash
 
 pushd "$1"
-virtualenv -p /usr/bin/python venv
-source ./venv/bin/activate
-pip install glob2
-pip install 'fabric<2.0'
+if [ ! -d "./venv" ]; then 
+	virtualenv -p /usr/bin/python venv
+	source ./venv/bin/activate
+	pip install glob2
+	pip install 'fabric<2.0'
 
-pushd ./venv
-git clone https://github.com/marioskogias/distbenchr.git
-python ./distbenchr/setup.py install 
-popd
+	pushd ./venv
+	git clone https://github.com/marioskogias/distbenchr.git
+	python ./distbenchr/setup.py install 
+	popd
 
-deactivate 
+	deactivate 
+else
+	echo "Python venv already exixst. If you want to reinstall it please remove $1/venv dir and run this script again." 
+fi
 popd
