@@ -102,6 +102,31 @@ $REPO_ROOT/install/freq/cpufreq-set-all -f 2000000
 
 
 ## Evaluation 
+### Getting all the data for Figure 6
+You can launch the evaluation for all the benchmarks with `launch_all_exps`. Firstly, create a screen session 
+```bash 
+screen -L -Logfile ae_all_log -S ae_ptemagnet_all
+```
+Then start the evaluation of all benchmarks 
+```bash
+cd evaluation;
+. launch_all_exps.sh
+```
+and make sure the script is running (the virtual machine should start booting, then after about 40 seconds it should move to prefaulting host memory, then launch MLPerf and a benchmark).
+If you get an import problem with `distbenchr` inside the screen run 
+```bash 
+cd distbenchr
+python setup.py install
+cd ..
+```
+and try running `launch_all_exps.sh` again.
+You can minimize the screen by pressing CTRL+A and D. You can now log out from the host machine as execution will take time. 
+You can open a screen to see what is going on with 
+```bash
+screen -r ae_ptemagnet_all
+```
+
+### Running individual benchmarks
 ```bash
 cd ./evaluation/; 
 mkdir -p results;
@@ -115,22 +140,6 @@ cd ./evaluation/; mkdir -p results; ./launch_exp.py --experiment_tag asplos21_ae
 To reproduce the results of Figure 6, one needs to run the script for each benchmark two times: with clean and modified kernel and compare the execution times. Note that each of the SPEC'17 benchmarks executes for about 12 minutes. The total running time measurement of the average execution time for one benchmark and one kernel type can be approximately calculated 12 * `num_experiments`.
 
 The scripts save the result files to the directory specified with the parameter `--result_dir`. As this artifact is designed to measure execution time, only `Test_time` line is meaningful in a result file (all other numbers should be ignored).
-
-You can launch the evaluation for all the benchmarks with `launch_all_exps`. Firstly, create a screen session 
-```bash 
-screen -L -Logfile ae_all_log -S ae_ptemagnet_all
-```
-Then start the evaluation of all benchmarks 
-```bash
-cd evaluation;
-. launch_all_exps.sh
-```
-and make sure the script is running (the virtual machine should start booting, then after about 40 seconds it should move to prefaulting host memory, then launch MLPerf and a benchmark)
-You can close the screen by pressing CTRL+A and D. You can now log out from the host machine as execution will take time. 
-You can open a screen to see what is going on with 
-```bash
-screen -r ae_ptemagnet_all
-```
 
 ## Miscellaneous
 
