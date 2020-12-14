@@ -7,6 +7,7 @@ This repository includes an artifact evaluation pack for PTEMagnet (#111 ASPLOS'
 * scripts for installing relevant tools and setting the environment
 
 ## Installation
+### Part 1: packages and environment
 On Ubuntu 18.04 LTS, 
 ```bash
 ./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE> 
@@ -18,7 +19,37 @@ This script
 * sets relevant shell and python environment for scripts automating launching and measuring the execution time of benchmarks
 * disables THP on the host machine
 
-**Note that we can provide access to a preconfigured Cloudlab profile (and servers) on which this code was tested. Using the Cloudlab profile accelerates installation and simplifies troubleshooting. If you are interested in running the artifact evaluation on Cloudlab, please email Artemiy artemiy.margaritov@ed.ac.uk..**
+**Note that we can provide access to a preconfigured Cloudlab profile (and servers) on which this code was tested. Using the Cloudlab profile accelerates installation and simplifies troubleshooting. If you are interested in running the artifact evaluation on Cloudlab, please email Artemiy <artemiy.margaritov@ed.ac.uk>.**
+
+### Part 2: setting ssh keys for passwordless login to a machine 
+Evaluation scripts should be able to passwordlessly ssh to 1) a virtual machine where the benchmarks would run and 2) to the host. In our opinion, the simplest way to achieve passwordless ssh is using ssh keys. To upload an ssh key to the virtual machine
+* generate ssh key with 
+```bash
+ssh-keygen -t rsa
+```
+* boot a virtual machine with the provided disk image (see section Miscellaneous below for instructions on how to boot a virtual machine manually)
+* upload the ssh key to a virtual machine with 
+```bash 
+ssh-copy-id -p 6666 user@localhost
+```
+When asked for password, type `user`
+* To allow passwordless login from the host to the host itself upload the ssh key to it
+```bash
+# This does not work on Cloudlab!
+ssh-copy-id $USER@localhost
+```
+If using Cloudlab, you would need to copy your cloudlab ssh key to the host 
+```bash
+# on machine you ssh to Cloudlab to
+scp ~/.ssh/<YOUR_CLOUDLAB_KEY> -P 22 <CLOUDLAB_USERNAME@CLOUDLAB_MACHINE>:~/.ssh/ 
+# on Cloudlab machine 
+chmod 400 ~/.ssh/<YOUR_COPYED_CLOUDLAB_KEY>
+```
+* shutdown the virtual machine
+```bash 
+ssh -p 6666 user@localhost 'sudo shutdown -h now' 
+```
+
 
 ## Evaluation 
 ```bash
