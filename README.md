@@ -20,7 +20,8 @@ git clone --recurse-submodules https://github.com/amargaritov/PTEMagnet_artifact
 This step can take up to 2 hours. 
 ```bash
 cd PTEMagnet_artifact_evaluation
-./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE> 
+./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE>
+source source.sh
 ```
 This script  
 * installs all relevant tools & libraries
