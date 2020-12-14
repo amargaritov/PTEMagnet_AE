@@ -65,6 +65,30 @@ ssh-add ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
 ```bash 
 ssh -p 6666 user@localhost 'sudo shutdown -h now' 
 ```
+### Part: Disable CPU frequency scaling
+Dynamic CPU frequency scaling can lead to variability in performance and can introduce substational noise to the measurements. To disable frequency scaling one needs
+* disable `P-states` in BIOS (actual list of settings to change in BIOS depends on a server model)
+* update Linux kernel boot paramenters to change the frequency driver from `intel_pstate` to `acpi_driver`
+  * edit `/etc/default/grub`: add the following boot parameters to `GRUB_CMDLINE_LINUX_DEFAULT`
+  `usbcore.autosuspend=-1 intel_pstate=disable intel_iommu=on iommu=pt nokaslr rhgb quiet tsc=reliable cpuidle.off=1 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 pcie_aspm=off processor.ignore_ppc=1`
+  As a result, you should have a line like this one
+  `GRUB_CMDLINE_LINUX_DEFAULT="quiet splash usbcore.autosuspend=-1 intel_pstate=disable intel_iommu=on iommu=pt nokaslr rhgb quiet tsc=reliable cpuidle.off=1 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 pcie_aspm=off processor.ignore_ppc=1"
+  * update grub settings 
+  ```bash
+  sudo update-grub
+  ```
+  * reboot to the updated kernel 
+  ```
+  sudo reboot
+  ```
+* install cpufreq
+```bash 
+sudo apt-get install cpufrequtils
+```
+* set frequency on all cores to 2GHz
+```bash 
+$REPO_ROOT/install/freq/cpufreq-set-all -f 2000000
+```
 
 
 ## Evaluation 
