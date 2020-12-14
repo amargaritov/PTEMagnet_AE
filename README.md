@@ -9,6 +9,7 @@ This repository includes an artifact evaluation pack for PTEMagnet (#111 ASPLOS'
 ## Installation
 ### Part 1: clone this repo
 ```bash
+sudo apt-get update
 sudo apt-get install git
 git clone --recurse-submodules https://github.com/amargaritov/PTEMagnet_artifact_evaluation.git
 ```
