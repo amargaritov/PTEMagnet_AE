@@ -1,4 +1,4 @@
-# PTEMagnet_artifact_evaluation
+# PTEMagnet Artifact Evaluation Pack
 
 This repository includes an artifact for PTEMagnet (#111 ASPLOS'21 paper). The artifact reproduces the results of Figure 6 in the paper. This repo also includes the PTEMagnet path for Linux Kernel, making it publically available. The artifact consists of:
 * a patch implementing PTEMagnet in Linux Kernel v4.19 with scripts for building clean and modified versions of the kernel 
