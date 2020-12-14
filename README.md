@@ -7,16 +7,21 @@ This repository includes an artifact evaluation pack for PTEMagnet (#111 ASPLOS'
 * scripts for installing relevant tools and setting the environment
 
 ## Installation
+This code is designed to run on a x86 server with 20+ cores running Ubuntu 18.04 LTS. 
+
 ### Part 1: clone this repo
 ```bash
+sudo apt-get update
 sudo apt-get install git
 git clone --recurse-submodules https://github.com/amargaritov/PTEMagnet_artifact_evaluation.git
 ```
 
 ### Part 2: install packages and set environment
-On Ubuntu 18.04 LTS, 
+This step can take up to 2 hours. 
 ```bash
-./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE> 
+cd PTEMagnet_artifact_evaluation
+./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE>
+source source.sh
 ```
 This script  
 * installs all relevant tools & libraries
@@ -35,7 +40,7 @@ ssh-keygen -t rsa
 ```
 * Boot a virtual machine with the provided disk image
 ```bash
-KERNEL=clean; sudo qemu-system-x86_64 -kernel /disk/local/linux/linux_$KERNEL/arch/x86/boot/bzImage -boot c -m 64G -hda /disk/local/rootfs.img -append "root=/dev/sda rw" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic
+KERNEL=clean; sudo qemu-system-x86_64 KERNEL=clean; sudo qemu-system-x86_64 -kernel $KERNEL_DIR/linux_$KERNEL/arch/x86/boot/bzImage -boot c -m 64G -hda $IMAGE_DIR/rootfs.img -append "root=/dev/sda rw" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic
 ```
 * Wait for machine to boot (login prompt should appear)
 * Start a new shell on the host, upload the generated ssh key to a virtual machine 
@@ -57,9 +62,42 @@ chmod 400 ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
 ```
+Test that you can now passwordlessly login to the host
+```bash
+ssh $USER@localhost
+```
 * Shutdown the virtual machine
 ```bash 
 ssh -p 6666 user@localhost 'sudo shutdown -h now' 
+```
+### Part 4: Disable CPU frequency scaling
+Dynamic CPU frequency scaling can lead to variability in performance and can introduce substational noise to the measurements. To disable frequency scaling, one needs
+* disable `P-states` in BIOS (the actual list of settings to change in BIOS depends on a server model, please contact Artemiy <artemiy.margaritov@ed.ac.uk> if you experience problems -- we may provide a presetup Cloudlab machine to you)
+* update Linux kernel boot paramenters to change the frequency driver from `intel_pstate` to `acpi driver`
+  * edit `/etc/default/grub`: add the following boot parameters to `GRUB_CMDLINE_LINUX_DEFAULT`:
+  `usbcore.autosuspend=-1 intel_pstate=disable intel_iommu=on iommu=pt nokaslr rhgb quiet tsc=reliable cpuidle.off=1 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 pcie_aspm=off processor.ignore_ppc=1`
+  As a result, you should have a line like this one
+  `GRUB_CMDLINE_LINUX_DEFAULT="quiet splash usbcore.autosuspend=-1 intel_pstate=disable intel_iommu=on iommu=pt nokaslr rhgb quiet tsc=reliable cpuidle.off=1 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 pcie_aspm=off processor.ignore_ppc=1"
+  * update grub settings 
+  ```bash
+  sudo update-grub
+  ```
+  * reboot to the updated kernel 
+  ```
+  sudo reboot
+  ```
+* install cpufreq
+```bash 
+sudo apt-get install cpufrequtils
+```
+* check if `intel_pstate` got changed to `acpi driver`:
+```bash
+cpufreq-info | grep driver
+```
+should show `acpi`
+* set frequency on all cores to 2GHz
+```bash 
+$REPO_ROOT/install/freq/cpufreq-set-all -f 2000000
 ```
 
 
@@ -111,7 +149,7 @@ Note that the VM image is already downloaded by the installation script. You don
 ### Running a virtual machine manually
 If you want to boot a virtual machine with the VM image manually you can run the following command:
 ```bash 
-KERNEL=clean; sudo qemu-system-x86_64 -kernel /disk/local/linux/linux_$KERNEL/arch/x86/boot/bzImage -boot c -m 64G -hda /disk/local/rootfs.img -append "root=/dev/sda rw" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic
+KERNEL=clean; sudo qemu-system-x86_64 -kernel $KERNEL_DIR/linux_$KERNEL/arch/x86/boot/bzImage -boot c -m 64G -hda $IMAGE_DIR/rootfs.img -append "root=/dev/sda rw" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic
 ```
 This command boot a machine with 20 cores and 64GB memory. 
 After launching the virtual machine you can ssh into it with
