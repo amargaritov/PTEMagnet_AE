@@ -1,4 +1,3 @@
-#/bin/bash
 
 ./launch_exp.py --experiment_tag asplos21_ae --kernel clean    --app mcf     --num_experiments 10 --result_dir $(pwd)/results
 ./launch_exp.py --experiment_tag asplos21_ae --kernel modified --app mcf     --num_experiments 10 --result_dir $(pwd)/results
