@@ -26,11 +26,11 @@ source source.sh
 This script  
 * installs all relevant tools & libraries
 * builds the _clean_ kernel and the _modified_ kernel with PTEMagnet
-* downloads the disk image for a VM (if run outside of Cloudlab)
+* downloads the disk image for a VM (if run outside of CloudLab)
 * sets relevant shell and python environment for scripts automating launching and measuring the execution time of benchmarks
 * disables THP on the host machine
 
-**Note that we can provide access to a preconfigured [CloudLab](https://www.cloudlab.us/)profile (and servers) on which this code was tested. Using the Cloudlab profile accelerates installation and simplifies troubleshooting. If you are interested in running the artifact evaluation on Cloudlab, please email Artemiy <artemiy.margaritov@ed.ac.uk>.**
+**Note that we can provide access to a preconfigured [CloudLab](https://www.cloudlab.us/) profile (and servers) on which this code was tested. CloudLab is a flexible, scientific infrastructure which provides researchers with control and visibility all the way down to the bare metal. Using the CloudLab profile accelerates installation and simplifies troubleshooting. If you are interested in running the artifact evaluation on CloudLab, please email Artemiy <artemiy.margaritov@ed.ac.uk>.**
 
 ### Part 3: setting ssh keys for passwordless ssh
 Evaluation scripts should be able to passwordlessly ssh to 1) a virtual machine where the benchmarks would run and 2) to the host. In our opinion, the simplest way to achieve passwordless ssh is using ssh keys. To upload an ssh key to the virtual machine
@@ -53,7 +53,7 @@ when asked for password, type `user`
 # This does not work on Cloudlab!
 ssh-copy-id $USER@localhost
 ```
-If using Cloudlab, you would need to copy your cloudlab ssh key to the host 
+If using CloudLab, you would need to copy your cloudlab ssh key to the host 
 ```bash
 # on machine you ssh to Cloudlab from
 scp -P 22 ~/.ssh/<YOUR_CLOUDLAB_KEY> <CLOUDLAB_USERNAME@CLOUDLAB_MACHINE>:~/.ssh/ 
