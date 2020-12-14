@@ -56,8 +56,9 @@ def main():
             execution_time.append(float(line.strip().split()[1]))
             break
 
-      mnt.monitor() # wait for the client to finish
+#      mnt.monitor() # wait for the client to finish
       time.sleep(40)
+      mnt.killall()
 
       print("Finished all experiments, execution times are:")
       print(execution_time)
