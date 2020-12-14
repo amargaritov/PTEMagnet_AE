@@ -61,14 +61,16 @@ ssh -p 6666 user@localhost 'sudo shutdown -h now'
 ```bash
 cd ./evaluation/; 
 mkdir -p results;
-./lauch_exp.py --experiment_tag asplos21_ae --kernel [ clean | modified] --app [ bfs | cc | nibble | pr | gcc | mcf | omnetpp | xz ] --num_experiments <int>  --result_dir <PATH_TO_STORE_RESULT_FILES> 
+./lauch_exp.py --experiment_tag asplos21_ae --kernel [ clean | modified] --app [ bfs | cc | nibble | pr | gcc | mcf | omnetpp | xz ] --num_experiments <int>  --result_dir <FULL_PATH_DIR_TO_STORE_RESULT_FILES_TO> 
 ```
 This script runs the benchmark specified under the `app` parameter in colocation with MLPerf ObjDetect in a virtual machine under the selected kernel type `num_experiments` number of times. The script outputs (prints) the average execution time of the benchmark in such an environment at the end of its execution. 
 For example, the following command will print average execution time for mcf run 10 times on a kernel with PTEMagnet (in colocaiton with MLPerf ObjDetect):
 ```bash
-cd ./evaluation/; mkdir -p results; ./lauch_exp.py --experiment_tag asplos21_ae --kernel modified --app mcf --num_experiments 10 --result_dir ./results
+cd ./evaluation/; mkdir -p results; ./launch_exp.py --experiment_tag asplos21_ae --kernel modified --app mcf --num_experiments 10 --result_dir $(pwd)/results
 ```
 To reproduce the results of Figure 6, one needs to run the script for each benchmark two times: with clean and modified kernel and compare the execution times. Note that each of the SPEC'17 benchmarks executes for about 12 minutes. The total running time measurement of the average execution time for one benchmark and one kernel type can be approximately calculated 12 * `num_experiments`.
+
+The scripts save the result files to the directory specified with the parameter `--result_dir`. As this artifact is designed to measure execution time, only `Test_time` line is meaningful in a result file (all other numbers should be ignored).
 
 ## Miscellaneous
 
