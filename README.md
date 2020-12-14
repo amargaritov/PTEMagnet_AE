@@ -17,6 +17,8 @@ This script
 * sets relevant shell and python environment for scripts automating launching and measuring execution time of benchmarks
 * disables THP on the host machine
 
+**Note that we can provide access to a preconfigured Cloudlab profile (and servers) on which this code was tested. Using the Cloudlab profile accelerates installation and simplifies troubleshooting. If you are intersted in running the artifact evaluation on Cloudlab, please email to Artemiy <artemiy.margaritov@ed.ac.uk>.**
+
 ## Evaluation 
 ```bash
 cd ./evaluation/; 
