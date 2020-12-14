@@ -30,7 +30,7 @@ This script
 * sets relevant shell and python environment for scripts automating launching and measuring the execution time of benchmarks
 * disables THP on the host machine
 
-**Note that we can provide access to a preconfigured Cloudlab profile (and servers) on which this code was tested. Using the Cloudlab profile accelerates installation and simplifies troubleshooting. If you are interested in running the artifact evaluation on Cloudlab, please email Artemiy <artemiy.margaritov@ed.ac.uk>.**
+**Note that we can provide access to a preconfigured [CloudLab](https://www.cloudlab.us/)profile (and servers) on which this code was tested. Using the Cloudlab profile accelerates installation and simplifies troubleshooting. If you are interested in running the artifact evaluation on Cloudlab, please email Artemiy <artemiy.margaritov@ed.ac.uk>.**
 
 ### Part 3: setting ssh keys for passwordless ssh
 Evaluation scripts should be able to passwordlessly ssh to 1) a virtual machine where the benchmarks would run and 2) to the host. In our opinion, the simplest way to achieve passwordless ssh is using ssh keys. To upload an ssh key to the virtual machine
