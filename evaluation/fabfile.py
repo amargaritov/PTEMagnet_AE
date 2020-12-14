@@ -54,7 +54,8 @@ def copy_result(exp_name, app, kernel, host_result_dir, exp_no):
   get(source, target)
 
 
-@roles('clients')
+#@roles('clients')
+@run_bg('clients')
 def shutdown_vm():
   with settings(hide('warnings'), warn_only=True,):
     run('sudo shutdown -h now')

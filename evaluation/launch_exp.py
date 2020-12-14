@@ -47,7 +47,7 @@ def main():
       path_to_results_file_on_host =  args.result_dir+ '/' + args.app + '-on-' + args.kernel + '-kernel/' + 'result_' + str(exp_no)
 
       # shutdown the vm
-      execute(shutdown_vm)
+      mnt.bg_execute(shutdown_vm)
 
       # get execution time -- parse the reuslt file on the host
       with open(path_to_results_file_on_host, 'r') as rfile:
