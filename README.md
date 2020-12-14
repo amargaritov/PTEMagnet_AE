@@ -13,13 +13,13 @@ This code is designed to run on a x86 server with 20+ cores running Ubuntu 18.04
 ```bash
 sudo apt-get update
 sudo apt-get install git
-git clone --recurse-submodules https://github.com/amargaritov/PTEMagnet_artifact_evaluation.git
+git clone --recurse-submodules https://github.com/amargaritov/PTEMagnet_AE.git
 ```
 
 ### Part 2: install packages and set environment
 This step can take up to 2 hours. 
 ```bash
-cd PTEMagnet_artifact_evaluation
+cd PTEMagnet_AE
 ./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE>
 source source.sh
 ```
