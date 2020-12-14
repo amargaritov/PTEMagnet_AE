@@ -66,8 +66,8 @@ ssh-add ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
 ssh -p 6666 user@localhost 'sudo shutdown -h now' 
 ```
 ### Part: Disable CPU frequency scaling
-Dynamic CPU frequency scaling can lead to variability in performance and can introduce substational noise to the measurements. To disable frequency scaling one needs
-* disable `P-states` in BIOS (actual list of settings to change in BIOS depends on a server model)
+Dynamic CPU frequency scaling can lead to variability in performance and can introduce substational noise to the measurements. To disable frequency scaling, one needs
+* disable `P-states` in BIOS (the actual list of settings to change in BIOS depends on a server model, please contact Artemiy <artemiy.margaritov@ed.ac.uk> if you experience problems -- we may provide a presetup Cloudlab machine to you)
 * update Linux kernel boot paramenters to change the frequency driver from `intel_pstate` to `acpi_driver`
   * edit `/etc/default/grub`: add the following boot parameters to `GRUB_CMDLINE_LINUX_DEFAULT`
   `usbcore.autosuspend=-1 intel_pstate=disable intel_iommu=on iommu=pt nokaslr rhgb quiet tsc=reliable cpuidle.off=1 idle=poll intel_idle.max_cstate=0 processor.max_cstate=0 pcie_aspm=off processor.ignore_ppc=1`
