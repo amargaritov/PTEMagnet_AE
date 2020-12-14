@@ -8,7 +8,7 @@ This repository includes an artifact for PTEMagnet (#111 ASPLOS'21 paper). The a
 ## Installation
 On Ubuntu 18 LTS, 
 ```bash
-./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_100GB_FREE_SPACE> 
+./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE> 
 ```
 This script  
 * installs all relevant 
