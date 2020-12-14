@@ -62,6 +62,10 @@ chmod 400 ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/<YOUR_COPIED_CLOUDLAB_KEY>
 ```
+Test that you can now passwordlessly login to the host
+```bash
+ssh $USER@localhost
+```
 * Shutdown the virtual machine
 ```bash 
 ssh -p 6666 user@localhost 'sudo shutdown -h now' 
