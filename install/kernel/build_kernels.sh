@@ -58,11 +58,19 @@ function build_image() {
 
 # 1. Build clean kernel 
 
-prepare_repo $INSTALL_PATH clean
-build_image  $INSTALL_PATH clean
+if [ ! -d "$INSTALL_PATH/linux_clean" ]; then
+	prepare_repo $INSTALL_PATH clean
+	build_image  $INSTALL_PATH clean
+else 
+	echo "Seems that the linux_clean already was built. If you want to rebuild it, please remove $INSTALL_PATH/linux_clean dir and rerun this script"
+fi
 
 # 2. Build modified kernel 
 
+if [ ! -d "$INSTALL_PATH/linux_modified" ]; then
 prepare_repo $INSTALL_PATH modified
 patch_kernel $INSTALL_PATH modified
 build_image  $INSTALL_PATH modified
+else 
+	echo "Seems that the linux_modified already was built. If you want to rebuild it, please remove $INSTALL_PATH/linux_modified dir and rerun this script"
+fi
