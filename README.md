@@ -17,6 +17,7 @@ git clone --recurse-submodules https://github.com/amargaritov/PTEMagnet_artifact
 ### Part 2: install packages and set environment
 On Ubuntu 18.04 LTS, 
 ```bash
+cd PTEMagnet_artifact_evaluation
 ./install/install_all.sh <PATH_TO_DIR_WITH_AT_LEAST_150GB_FREE_SPACE> 
 ```
 This script  
