@@ -7,7 +7,7 @@ This repository includes an artifact evaluation pack for PTEMagnet (#111 ASPLOS'
 * scripts for installing relevant tools and setting the environment
 
 ## Installation
-This code is designed to run on a x86 server with 20+ cores running Ubuntu 18.04 LTS. 
+This code is designed to run on a x86 server with 20+ cores, more than 128GB of memory, and running Ubuntu 18.04 LTS. 
 
 ### Part 1: clone this repo
 ```bash
