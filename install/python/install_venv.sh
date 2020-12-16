@@ -9,8 +9,8 @@ if [ ! -d "./venv" ]; then
   pip install pandas
 	pip install 'fabric<2.0'
 
-	pushd ./venv
-	git clone https://github.com/marioskogias/distbenchr.git
+	pushd $REPO_ROOT/evaluation
+#	git clone https://github.com/marioskogias/distbenchr.git
 	python ./distbenchr/setup.py install 
 	popd
 
