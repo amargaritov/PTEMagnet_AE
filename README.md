@@ -126,7 +126,9 @@ cd ..
 ```
 and try running `launch_all_exps.sh` again.
 
-`launch_all_exps.sh` should output that it started booting a virtual machine. In about a minute it will proceed with pinning QEMU threads to cores and prefaulting the host memory -- you will see a lot of relevant output in a console. This means that the script is working as intended. Something is wrong if you get a prompt for logging in to the host machine (as the current user) and the script doesn't output anything new to the console for more than a minute after that: this shouldn't happen. If this is the case, please repeat setting the passwordless ssh for the host (Part #3 in Installation).
+[comment]: # (`launch_all_exps.sh` should output that it started booting a virtual machine. In about a minute it will proceed with pinning QEMU threads to cores and prefaulting the host memory -- you will see a lot of relevant output in a console. This means that the script is working as intended.)
+
+Something got wrong if instead of virtual machine booting you get a prompt for logging in to the host machine (as the current host user) and the `launch_all_exps.sh` script doesn't output anything new to the console for more than 2 minutes after it was started: this shouldn't happen. If this is the case, please repeat setting the passwordless ssh for the host (Part #3 in Installation).
 
 You can minimize (detach) the screen by pressing CTRL+A and D. You can now log out from the host machine as execution will take time (approximately 60 hours). We recommend checking how it is doing from time to time though. 
 You can open a screen to see what is going on with 
