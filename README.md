@@ -71,7 +71,8 @@ ssh $USER@localhost
 ssh -p 6666 user@localhost 'sudo shutdown -h now' 
 ```
 ### Part 4: Disable dynamic CPU power management
-**Note that this step is optional. This step should only be done if the measurements do not reproduce the expected results.** 
+**Note that this step is optional. This step should only be done if the measurements do not reproduce the expected results. For the initial setup, you can proceed to the Evaluation section.** 
+
 We found that dynamic CPU frequency scaling migth lead to variability in performance and can introduce substational noise to the measurements. As a result, to reduce the system jitter in the latency measurement experiments it is better to disable frequency scaling (set constant CPU frequency). For fixing CPU frequency, one needs
 * change BIOS settings
    * disable `P states`
