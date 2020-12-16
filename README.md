@@ -146,7 +146,7 @@ For example, the following command will print average execution time for mcf run
 ```bash
 cd ./evaluation/; mkdir -p results; ./launch_exp.py --experiment_tag asplos21_ae --kernel modified --app mcf --num_experiments 10 --result_dir $(pwd)/results
 ```
-To reproduce the results of Figure 6, one needs to run the script for each benchmark two times: with clean and modified kernel and compare the execution times (`launch_all_exps.sh` automates this process). Note that each of the SPEC'17 benchmarks executes for about 12 minutes. The total running time measurement of the average execution time for one benchmark and one kernel type can be approximately calculated 12 * `num_experiments`.
+To reproduce the results of Figure 6, one needs to run the script for each benchmark two times: with clean and modified kernel and compare the execution times (`launch_all_exps.sh` automates this process). Note that running all 8 benchmarks once takes approximately 80 minutes. The total running time measurement of the average execution time for one benchmark and one kernel type can be approximately calculated 100 * `total-number-of-experiments`. The `launch_all_exps.sh` script lauches each benchmark 20 times and evaluates two configurations, so its execution takes approximately 65 hours in total. 
 
 
 
