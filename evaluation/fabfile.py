@@ -6,11 +6,18 @@ from distbenchr import run_bg
 import os
 import socket
 import glob2
+import multiprocessing
 
 
-def_cmd = ' cd /disk/local/ptemagnet_eval; source source.sh; '
 kernel_dir = os.environ['KERNEL_DIR']
 image_dir =  os.environ['IMAGE_DIR']
+repo_root_host = os.environ['REPO_ROOT']
+
+qemu_cpu_affinity_2sockets_10_cores="10 20 21 22 23 24 25 26 27 30 31 32 33 34 35 36 37 38 39 9"
+qemu_cpu_affinity_2sockets_12_cores="12 24 25 26 27 28 29 30 31 36 37 38 39 40 41 42 43 44 45 46"
+
+def_cmd = ' cd /disk/local/ptemagnet_eval; source source.sh; '
+def_server_cmd = ' cd ' + repo_root_host + '; source source.sh; '
 
 env.roledefs = {
         'servers': [socket.gethostname()],
@@ -72,5 +79,20 @@ def shutdown_vm():
 def start_vm(kernel):
   kernel = kernel.replace("\"","") 
   #cmd = 'sudo numactl --membind=0 --cpunodebind=0 qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 128G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic'
-  cmd = 'sudo qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 128G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic'
+  cmd = 'sudo qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 128G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic -numa node,nodeid=0 -numa node,nodeid=1 -name test,debug-threads=on'
   run(cmd)
+
+@roles('servers')
+def pin_qemu_threads():
+    cpucount = multiprocessing.cpu_count() 
+    if cpucount == 40:
+        qemu_cpu_affinity = qemu_cpu_affinity_2sockets_10_cores
+    else:
+        if cpucount == 48:
+            qemu_cpu_affinity = qemu_cpu_affinity_2sockets_12_cores
+        else:
+            print("This artifact can not be tested on a machine with less than 20 physical CPU cores")
+    # this one works on Cloudlab c220g5
+    #cmd = def_server_cmd + ' sudo python3 ' + repo_root_host + '/evaluation/qemu_affinity.py -v -k 10 20 21 22 23 24 25 26 27 30 31 32 33 34 35 36 37 38 39 9 -- `ps aux | grep qemu-system-x86 | grep -v sudo | head -n 1 | awk \'{print $2}\'`'
+    cmd = def_server_cmd + ' sudo python3 ' + repo_root_host + '/evaluation/qemu_affinity.py -v -k ' + qemu_cpu_affinity + ' -- `ps aux | grep qemu-system-x86 | grep -v sudo | head -n 1 | awk \'{print $2}\'`'
+    run(cmd)

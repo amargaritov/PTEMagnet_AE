@@ -36,6 +36,8 @@ def main():
       # wait for the vm to start
       time.sleep(40)
 
+      execute(pin_qemu_threads)
+
       # alloc memory in the guest to prefault memory 
       execute(prefault_hostmem)
 
