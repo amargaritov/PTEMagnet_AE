@@ -13,8 +13,12 @@ kernel_dir = os.environ['KERNEL_DIR']
 image_dir =  os.environ['IMAGE_DIR']
 repo_root_host = os.environ['REPO_ROOT']
 
-qemu_cpu_affinity_2sockets_10_cores="10 20 21 22 23 24 25 26 27 30 31 32 33 34 35 36 37 38 39 9"
-qemu_cpu_affinity_2sockets_12_cores="12 24 25 26 27 28 29 30 31 36 37 38 39 40 41 42 43 44 45 46"
+#qemu_cpu_affinity_2sockets_10_cores="10 20 21 22 23 24 25 26 27 30 31 32 33 34 35 36 37 38 39 9"
+#(echo "10-19,30-39"; for i in {1..8}; do echo "0-9,20-29"; done; for i in in {1..10}; do echo "10-19,30-39"; done) | tr '\n' ' '
+qemu_cpu_affinity_2sockets_10_cores="10-19,30-39 0-9,20-29 0-9,20-29 0-9,20-29 0-9,20-29 0-9,20-29 0-9,20-29 0-9,20-29 0-9,20-29 10-19,30-39 10-19,30-39 10-19,30-39 10-19,30-39 10-19,30-39 10-19,30-39 10-19,30-39 10-19,30-39 10-19,30-39 10-19,30-39 10-19,30-39"
+#qemu_cpu_affinity_2sockets_12_cores="12 24 25 26 27 28 29 30 31 36 37 38 39 40 41 42 43 44 45 46"
+#(b=12-23,36-47; a=0-11,24-31; echo $b; for i in {1..8}; do echo $a; done; for i in in {1..10}; do echo $b; done) | tr '\n' ' '
+qemu_cpu_affinity_2sockets_12_cores="12-23,36-47 0-11,24-31 0-11,24-31 0-11,24-31 0-11,24-31 0-11,24-31 0-11,24-31 0-11,24-31 0-11,24-31 12-23,36-47 12-23,36-47 12-23,36-47 12-23,36-47 12-23,36-47 12-23,36-47 12-23,36-47 12-23,36-47 12-23,36-47 12-23,36-47 12-23,36-47"
 
 def_cmd = ' cd /disk/local/ptemagnet_eval; source source.sh; '
 def_server_cmd = ' cd ' + repo_root_host + '; source source.sh; '
@@ -50,6 +54,7 @@ def start_experiment(exp_name, app, kernel):
 def prefault_hostmem():
   with settings(hide('warnings'), warn_only=True,):
     cmd = def_cmd + '$REPO_ROOT/atc_measurements/prefault_hostmem/alloc_125GB.sh'
+#    cmd = def_cmd + '$REPO_ROOT/atc_measurements/prefault_hostmem/alloc_60GB.sh'
     run(cmd)
 
 
@@ -65,7 +70,10 @@ def copy_result(exp_name, app, kernel, host_result_dir, exp_no):
 @run_bg('clients')
 def shutdown_vm():
   with settings(hide('warnings'), warn_only=True,):
-    run('sudo shutdown -h now')
+    try:
+        run('sudo shutdown -h now')
+    except paramiko.ssh_exception.SSHException:
+        pass
 
 
 
@@ -79,7 +87,9 @@ def shutdown_vm():
 def start_vm(kernel):
   kernel = kernel.replace("\"","") 
   #cmd = 'sudo numactl --membind=0 --cpunodebind=0 qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 128G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic'
-  cmd = 'sudo qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 128G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic -numa node,nodeid=0 -numa node,nodeid=1 -name test,debug-threads=on'
+#  cmd = 'sudo qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 128G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic -numa node,nodeid=0 -numa node,nodeid=1 -name test,debug-threads=on'
+#  cmd = 'sudo qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 128G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic -name test,debug-threads=on'
+  cmd = 'sudo qemu-system-x86_64 -kernel ' + kernel_dir + '/linux_' + str(kernel) + '/arch/x86/boot/bzImage -boot c -m 128G -hda ' + image_dir + '/rootfs.img -append "root=/dev/sda rw transparent_hugepage=never" -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::6666-:22 --enable-kvm -smp 20 -cpu host -nographic -name test,debug-threads=on'
   run(cmd)
 
 @roles('servers')
