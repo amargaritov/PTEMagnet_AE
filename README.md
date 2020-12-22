@@ -70,7 +70,7 @@ ssh $USER@localhost
 ```bash 
 ssh -p 6666 user@localhost 'sudo shutdown -h now'
 ```
-### Part 3b: set up passwordless sudo
+### Part 3b: set up passwordless sudo on the host
 * Open the `/etc/sudoers` file (as root, of course!) by running:
 ```bash
 sudo visudo
