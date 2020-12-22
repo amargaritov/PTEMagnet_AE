@@ -32,7 +32,7 @@ This script
 
 **Note that we can provide access to a preconfigured [CloudLab](https://www.cloudlab.us/) profile (and servers) on which this code was tested. CloudLab is a flexible, scientific infrastructure which provides researchers with control and visibility all the way down to the bare metal. Using the CloudLab profile accelerates installation and simplifies troubleshooting. If you are interested in running the artifact evaluation on CloudLab, please email Artemiy <artemiy.margaritov@ed.ac.uk>.**
 
-### Part 3: setting ssh keys for passwordless ssh
+### Part 3a: setting ssh keys for passwordless ssh
 Evaluation scripts should be able to passwordlessly ssh to 1) a virtual machine where the benchmarks would run and 2) to the host. In our opinion, the simplest way to achieve passwordless ssh is using ssh keys. To upload an ssh key to the virtual machine
 * Generate ssh key with 
 ```bash
@@ -68,8 +68,16 @@ ssh $USER@localhost
 ```
 * Shutdown the virtual machine
 ```bash 
-ssh -p 6666 user@localhost 'sudo shutdown -h now' 
+ssh -p 6666 user@localhost 'sudo shutdown -h now'
 ```
+### Part 3b: set up passwordless sudo
+* Open the `/etc/sudoers` file (as root, of course!) by running:
+```bash
+sudo visudo
+```
+* At the end of the /etc/sudoers file add this line:
+`<username>     ALL=(ALL) NOPASSWD:ALL`
+
 ### Part 4: Disable dynamic CPU power management
 **Note that this step is optional. This step should only be done if the measurements do not reproduce the expected results. For the initial setup, you can proceed to the Evaluation section.** 
 
