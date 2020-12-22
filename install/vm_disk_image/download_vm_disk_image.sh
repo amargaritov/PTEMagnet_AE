@@ -34,7 +34,7 @@ if [ -z "$(hostname | grep cloudlab)" ]; then
       exit 124
     else 
       echo "Unpacking..."
-      pigz -d $INSTALL_PATH/rootfs.img.gz
+      pigz -d -f $INSTALL_PATH/rootfs.img.gz
     fi
 	fi
 # else 
