@@ -34,10 +34,12 @@ $SCRIPT_DIR/kernel/build_kernels.sh $KERNEL_DIR
 export IMAGE_DIR="$INSTALL_PATH/vm_images"
 echo "export IMAGE_DIR=\"$INSTALL_PATH/vm_images\"" >> $REPO_ROOT/source.sh 
 
+FAILED_DISK_DWNL=0
 $SCRIPT_DIR/vm_disk_image/download_vm_disk_image.sh $IMAGE_DIR 
-if [ $? -eq 124 ]; then
-    # Timeout occurred
-  exit 124
+if [ $? -ne 0 ]; then
+  #echo "It seems that something is wrong with the download source. Please sent a message to Artemiy <artemiy.margaritov@ed.ac.uk>" 
+  # Timeout occurred
+  FAILED_DISK_DWNL=1
 fi
 
 #echo "$REPO_ROOT/evaluation/disable_thp_no_drop.sh" >> $REPO_ROOT/source.sh
@@ -49,5 +51,9 @@ echo "source $REPO_ROOT/venv/bin/activate" >> $REPO_ROOT/source.sh
 
 echo "cd $REPO_ROOT; source source.sh" >> ~/.bashrc 
 
-
 source $REPO_ROOT/source.sh
+
+if [ $FAILED_DISK_DWNL -eq 1]; then
+    echo "It seems that something went wrong when download the VM image. Please sent a message to Artemiy <artemiy.margaritov@ed.ac.uk>" 
+    exit 101
+fi
